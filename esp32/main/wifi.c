@@ -1,6 +1,6 @@
 #include "esp_wifi.h"
 #include "esp_log.h"
-//#include "sdkconfig.h"
+#include "sdkconfig.h"
 #include "wifi.h"
 
 //defined in config file to avoid leaking secrets

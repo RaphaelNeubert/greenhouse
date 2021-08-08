@@ -2,4 +2,4 @@
 set(COMPONENT_REQUIRES )
 set(COMPONENT_PRIV_REQUIRES )
 
-idf_component_register(SRCS "greenhouse.c" "wifi.c" INCLUDE_DIRS ".")
+idf_component_register(SRCS "greenhouse.c" "wifi.c" "tcp-client.c" INCLUDE_DIRS ".")
