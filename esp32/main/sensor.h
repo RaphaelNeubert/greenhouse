@@ -13,10 +13,11 @@ typedef struct sensor_info{
     OneWireBus* owb;
     DS18B20_Info* devices[MAX_DEVICES];
     int num_devices;
+    owb_rmt_driver_info driver_info;
 }t_sensor_info;
 
-t_sensor_info init_sensors();
-int measure_temp(t_sensor_info sensors, float* readings);
+t_sensor_info* init_sensors();
+int measure_temp(t_sensor_info* sensors, float* readings);
 
 
 #endif
