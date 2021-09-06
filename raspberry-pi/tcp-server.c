@@ -8,9 +8,33 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <errno.h>
+#include <time.h>
 
 #define RECV_BUF_SIZE 500
 #define PORT 8080
+
+int logger(char type, char* msg){
+	FILE* fp;
+	time_t now;
+	char timestr[30];
+
+	time(&now);
+	strcpy(timestr,ctime(&now));
+	timestr[strlen(timestr)-1]='\0';
+
+	fp=fopen("log","a");
+	if (fp == NULL) return -1;
+
+    if (type == 'I'){
+        fprintf(fp, "%s [Info] %s\n", timestr, msg);
+    }
+    else if (type == 'E'){
+        fprintf(fp, "%s [Error] %s, errno: %s\n", timestr, msg, strerror(errno));
+    }
+
+	fclose(fp);
+    return 0;
+}
   
 int main(){
     //loop to make it retry in case of failure 
@@ -29,29 +53,29 @@ int main(){
 
         //socket creation
         if (server_socket == -1) {
-            printf("Socket creation failed. errno: %s\n", strerror(errno));
+            logger('E',"Socket creation failed");
             sleep(5);
             continue;
         }
-        printf("Socket successfully created.\n");
+        logger('I',"Socket successfully created");
         
         //socket bind
         if ((bind(server_socket, (struct sockaddr*)&server_sockaddr, sizeof(server_sockaddr))) != 0) {
-            printf("Socket bind failed. errno: %s\n", strerror(errno));
+            logger('E',"Socket bind failed");
             close(server_socket);
             sleep(5);
             continue;
         }
-        printf("Socket successfully binded.\n");
+        logger('I',"Socket successfully bound");
         
         //listen for connections on socket
         if ((listen(server_socket, 5)) != 0) {
-            printf("Listen failed. errno: %s\n", strerror(errno));
+            logger('E',"Listen failed");
             close(server_socket);
             sleep(5);
             continue;
         }
-        printf("Server listening..\n");
+        logger('I',"Server is listening");
       
         while (1){
             struct sockaddr_in client_sockaddr;
@@ -60,7 +84,7 @@ int main(){
             //accept connection on socket
             client_socket = accept(server_socket, (struct sockaddr*) &client_sockaddr, &client_sockaddr_len);
                 if (client_socket < 0){
-                    printf("server accept failed... errno: %s\n", strerror(errno));
+                    logger('E',"Server accept failed");
                     sleep(2);
                     continue;
                 }
@@ -72,7 +96,7 @@ int main(){
                     printf("%s\n", buf);
                 }
                 else {
-                    printf("socket read failed. errno: %s\n", strerror(errno));
+                    logger('E',"Socket read failed");
                 }
             close(client_socket);
         }
