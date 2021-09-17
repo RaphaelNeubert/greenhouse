@@ -9,11 +9,13 @@
 #include <unistd.h>
 #include <errno.h>
 #include <time.h>
+#include <sqlite3.h>
+#include "parser.h"
 
 #define RECV_BUF_SIZE 500
 #define PORT 8080
 
-int logger(char type, char* msg){
+int logger(char type, char* msg, char* msg2){
 	FILE* fp;
 	time_t now;
 	char timestr[30];
@@ -29,11 +31,30 @@ int logger(char type, char* msg){
         fprintf(fp, "%s [Info] %s\n", timestr, msg);
     }
     else if (type == 'E'){
-        fprintf(fp, "%s [Error] %s, errno: %s\n", timestr, msg, strerror(errno));
+        fprintf(fp, "%s [Error] %s %s, errno: %s\n", timestr, msg, msg2, strerror(errno));
     }
 
 	fclose(fp);
     return 0;
+}
+
+int msg_recieved(char* msg){
+    t_parse_output parse_output;
+    if (parse(msg, &parse_output)){ ;
+        sqlite3* db;
+        char *errmsg = NULL;
+        int sqlcheck;
+        
+        sqlcheck = sqlite3_open("../../tempdata.db", &db);
+        if (sqlcheck){
+            log('E',"Can't open database. sqlite errmsg: ", sqlite3_errmsg(db));
+        }
+        return 0;
+    }
+    else {
+        logger('E',"Parsing failed, check syntax.", "");
+        return -1;
+    }
 }
   
 int main(){
@@ -53,7 +74,7 @@ int main(){
 
         //socket creation
         if (server_socket == -1) {
-            logger('E',"Socket creation failed");
+            logger('E',"Socket creation failed", "");
             sleep(5);
             continue;
         }
@@ -61,7 +82,7 @@ int main(){
         
         //socket bind
         if ((bind(server_socket, (struct sockaddr*)&server_sockaddr, sizeof(server_sockaddr))) != 0) {
-            logger('E',"Socket bind failed");
+            logger('E',"Socket bind failed", "");
             close(server_socket);
             sleep(5);
             continue;
@@ -70,7 +91,7 @@ int main(){
         
         //listen for connections on socket
         if ((listen(server_socket, 5)) != 0) {
-            logger('E',"Listen failed");
+            logger('E',"Listen failed", "");
             close(server_socket);
             sleep(5);
             continue;
@@ -84,7 +105,7 @@ int main(){
             //accept connection on socket
             client_socket = accept(server_socket, (struct sockaddr*) &client_sockaddr, &client_sockaddr_len);
                 if (client_socket < 0){
-                    logger('E',"Server accept failed");
+                    logger('E',"Server accept failed", "");
                     sleep(2);
                     continue;
                 }
@@ -92,12 +113,12 @@ int main(){
 
             //read message from client socket until eof
             while ((n=read(client_socket, buf, RECV_BUF_SIZE-1)) > 0);
-                if (n >= 0){ //success
-                    printf("%s\n", buf);
-                }
-                else {
-                    logger('E',"Socket read failed");
-                }
+            if (n >= 0){ //success
+                printf("%s\n", buf);
+            }
+            else {
+                logger('E',"Socket read failed", "");
+            }
             close(client_socket);
         }
         close(server_socket);
