@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-Wall
+CFLAGS=-Wall -lsqlite3
 
 ODIR = obj
 SDIR = src

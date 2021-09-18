@@ -15,7 +15,7 @@
 #define RECV_BUF_SIZE 500
 #define PORT 8080
 
-int logger(char type, char* msg, char* msg2){
+int logger(char type, const char* msg, const char* msg2){
 	FILE* fp;
 	time_t now;
 	char timestr[30];
@@ -40,15 +40,23 @@ int logger(char type, char* msg, char* msg2){
 
 int msg_recieved(char* msg){
     t_parse_output parse_output;
+    sqlite3* db;
+    char sqlstatement[256];
+    char *errmsg = NULL;
+    int sqlcheck;
+
     if (parse(msg, &parse_output)){ ;
-        sqlite3* db;
-        char *errmsg = NULL;
-        int sqlcheck;
-        
         sqlcheck = sqlite3_open("../../tempdata.db", &db);
         if (sqlcheck){
-            log('E',"Can't open database. sqlite errmsg: ", sqlite3_errmsg(db));
+            logger('E',"Can't open database. sqlite errmsg: ", sqlite3_errmsg(db));
+            return -1;
         }
+        for (int i=0; i<parse_output.num_sensors; i++){
+            sprintf(sqlstatement, "INSERT INTO temperature (timestamp, romcode, value) \n VALUES (%d, %s, %f)",
+                    (unsigned)time(NULL), parse_output.temps[i].romcode, parse_output.temps[i].temperature);
+            puts(sqlstatement);
+        }
+        logger('I', "Parser Message:", parse_output.msg);
         return 0;
     }
     else {
@@ -78,7 +86,7 @@ int main(){
             sleep(5);
             continue;
         }
-        logger('I',"Socket successfully created");
+        logger('I',"Socket successfully created", "");
         
         //socket bind
         if ((bind(server_socket, (struct sockaddr*)&server_sockaddr, sizeof(server_sockaddr))) != 0) {
@@ -87,7 +95,7 @@ int main(){
             sleep(5);
             continue;
         }
-        logger('I',"Socket successfully bound");
+        logger('I',"Socket successfully bound", "");
         
         //listen for connections on socket
         if ((listen(server_socket, 5)) != 0) {
@@ -96,7 +104,7 @@ int main(){
             sleep(5);
             continue;
         }
-        logger('I',"Server is listening");
+        logger('I',"Server is listening", "");
       
         while (1){
             struct sockaddr_in client_sockaddr;

@@ -7,6 +7,9 @@
 #include "tcp-client.h"
 #include "sensor.h"
 
+#define SAMPLE_PERIOD 30
+#define RETRIES 10
+
 void app_main(void){
     ESP_ERROR_CHECK(nvs_flash_init());
     wifi_connect();
@@ -14,14 +17,19 @@ void app_main(void){
 
     t_sensor_info* sensors = init_sensors();
     while (1){
-        char msg[250]="";
-        float readings[sensors->num_devices];
-        measure_temp(sensors, readings);
+        char submsg[256]="";
+        char msg[512]="";
+        t_sensor_results readings[sensors->num_devices];
+        measure_temp(sensors, &readings);
+        //create string following the syntax that will be parsed
         for (int i=0; i<sensors->num_devices; i++){
             //append string
-            sprintf(msg+strlen(msg),"sensor: %d, value: %.1f\n", i, readings[i]);
+            sprintf(submsg+strlen(submsg),"%s sensor %s: %f", (i!=0)?',':"", readings[i].romcode, readings[i].value);
         }
-        while (send_data(msg)!=0) vTaskDelay(1000 / portTICK_PERIOD_MS);
-        vTaskDelay(2000 / portTICK_PERIOD_MS);
+        sprintf(msg, "test {%s}", submsg);
+        //send message
+        for (int i=0; send_data(msg)!=0 && i<RETRIES; i++){
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
+        }        vTaskDelay(SAMPLE_PERIOD*1000 / portTICK_PERIOD_MS);
     }
 }

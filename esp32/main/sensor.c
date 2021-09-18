@@ -6,8 +6,6 @@ t_sensor_info* init_sensors(){
     //create and initialize 1-wire bus
     sensors->owb = owb_rmt_initialize(&sensors->driver_info, GPIO_DS18B20, RMT_CHANNEL_1, RMT_CHANNEL_0);
     owb_use_crc(sensors->owb, true); //enable CRC check for ROM code
-    printf("address owb: %p\n", sensors->owb);
-    printf("address driver info: %p\n", &sensors->driver_info);
    
     //find connected devices
     bool found = false;
@@ -36,21 +34,14 @@ t_sensor_info* init_sensors(){
     return sensors;
 }
 
-int measure_temp(t_sensor_info* sensors, float* readings){
+int measure_temp(t_sensor_info* sensors, t_sensor_results* readings){
     //start conversions and wait until finished
-    puts("0");
-    printf("address owb: %p\n", sensors->owb);
     ds18b20_convert_all(sensors->owb);
-    puts("1");
     ds18b20_wait_for_conversion(sensors->devices[0]);
-    puts("2");
-
-    //float readings[MAX_DEVICES] = {0};
-    DS18B20_ERROR errors[MAX_DEVICES] = {0};
-    puts("3");
 
     for (int i=0; i<sensors->num_devices; i++){
-        errors[i] = ds18b20_read_temp(sensors->devices[i], &readings[i]);
-    }
+        ds18b20_read_temp(sensors->devices[i], &readings[i]->value);
+        owb_string_from_rom_code(sensors->devices[i]->rom_code, readings[i]->romcode, 17);
+    6
     return 0;
 }

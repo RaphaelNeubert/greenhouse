@@ -16,8 +16,13 @@ typedef struct sensor_info{
     owb_rmt_driver_info driver_info;
 }t_sensor_info;
 
+typedef struct sensor_results{
+    char romcode[16+1];
+    double value;
+}t_sensor_results;
+
 t_sensor_info* init_sensors();
-int measure_temp(t_sensor_info* sensors, float* readings);
+int measure_temp(t_sensor_info* sensors, t_sensor_results* readings);
 
 
 #endif
