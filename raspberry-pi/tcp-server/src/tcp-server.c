@@ -47,18 +47,29 @@ int msg_recieved(char* msg){
     char *errmsg = NULL;
     int sqlcheck;
 
+    //parse recieved message
     if (parse(msg, &parse_output)){ ;
-        sqlcheck = sqlite3_open("../../tempdata.db", &db);
+        sqlcheck = sqlite3_open("../tempdata.db", &db);
         if (sqlcheck){
             logger('E',"Can't open database. sqlite errmsg: ", sqlite3_errmsg(db));
             return -1;
         }
         printf("num sensors: %d\n", parse_output.num_sensors);
+        //store recieved values
         for (int i=0; i<parse_output.num_sensors; i++){
-            sprintf(sqlstatement, "INSERT INTO temperature (timestamp, romcode, value) \n VALUES (%d, %s, %f)",
+            //create sql statement
+            sprintf(sqlstatement, "INSERT INTO temperature (timestamp, romcode, value) \n VALUES (%d, '%s', %f);",
                     (unsigned)time(NULL), parse_output.temps[i].romcode, parse_output.temps[i].temperature);
             puts(sqlstatement);
+            //execute sql statement
+            sqlcheck = sqlite3_exec(db, sqlstatement, NULL, 0, &errmsg);
+            if (sqlcheck != SQLITE_OK){
+                logger('E',"Error executing SQL statement:", errmsg);
+                return -1;
+            }
+            else puts("success");
         }
+        //log optional parser message
         if (strlen(parse_output.msg) > 0) logger('I', "Parser Message:", parse_output.msg);
         return 0;
     }
