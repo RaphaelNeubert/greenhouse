@@ -20,11 +20,11 @@ void app_main(void){
         char submsg[256]="";
         char msg[512]="";
         t_sensor_results readings[sensors->num_devices];
-        measure_temp(sensors, &readings);
+        measure_temp(sensors, readings);
         //create string following the syntax that will be parsed
         for (int i=0; i<sensors->num_devices; i++){
             //append string
-            sprintf(submsg+strlen(submsg),"%s sensor %s: %f", (i!=0)?',':"", readings[i].romcode, readings[i].value);
+            sprintf(submsg+strlen(submsg),"%s sensor %s: %f", (i!=0)?",":"", readings[i].romcode, readings[i].value);
         }
         sprintf(msg, "test {%s}", submsg);
         //send message

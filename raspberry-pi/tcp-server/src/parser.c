@@ -35,6 +35,7 @@ static int get_rom_code(char* input, int* pos, t_parse_output* results, int n){
     }
     (*pos) = p;
     strncpy(results->temps[n].romcode, input+*pos-16, 16);
+    results->temps[n].romcode[16] = '\0';
     return 1;
 }
 
@@ -98,6 +99,7 @@ static int checktype(char* input, int* pos, t_parse_output* results, int n){
             else if (input[*pos] == '{') return checktype(input, pos, results, n);
             else {
                 results->msg[i] = input[*pos];
+                results->msg[i+1] = '\0';
                 i++;
                 (*pos)++;
             }

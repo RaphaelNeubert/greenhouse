@@ -18,7 +18,7 @@ typedef struct sensor_info{
 
 typedef struct sensor_results{
     char romcode[16+1];
-    double value;
+    float value;
 }t_sensor_results;
 
 t_sensor_info* init_sensors();

@@ -28,7 +28,7 @@ int logger(char type, const char* msg, const char* msg2){
 	if (fp == NULL) return -1;
 
     if (type == 'I'){
-        fprintf(fp, "%s [Info] %s\n", timestr, msg);
+        fprintf(fp, "%s [Info] %s %s\n", timestr, msg, msg2);
     }
     else if (type == 'E'){
         fprintf(fp, "%s [Error] %s %s, errno: %s\n", timestr, msg, msg2, strerror(errno));
@@ -40,6 +40,8 @@ int logger(char type, const char* msg, const char* msg2){
 
 int msg_recieved(char* msg){
     t_parse_output parse_output;
+    parse_output.num_sensors = 0;
+    parse_output.msg[0] = '\0';
     sqlite3* db;
     char sqlstatement[256];
     char *errmsg = NULL;
@@ -51,12 +53,13 @@ int msg_recieved(char* msg){
             logger('E',"Can't open database. sqlite errmsg: ", sqlite3_errmsg(db));
             return -1;
         }
+        printf("num sensors: %d\n", parse_output.num_sensors);
         for (int i=0; i<parse_output.num_sensors; i++){
             sprintf(sqlstatement, "INSERT INTO temperature (timestamp, romcode, value) \n VALUES (%d, %s, %f)",
                     (unsigned)time(NULL), parse_output.temps[i].romcode, parse_output.temps[i].temperature);
             puts(sqlstatement);
         }
-        logger('I', "Parser Message:", parse_output.msg);
+        if (strlen(parse_output.msg) > 0) logger('I', "Parser Message:", parse_output.msg);
         return 0;
     }
     else {
@@ -123,6 +126,7 @@ int main(){
             while ((n=read(client_socket, buf, RECV_BUF_SIZE-1)) > 0);
             if (n >= 0){ //success
                 printf("%s\n", buf);
+                msg_recieved(buf);
             }
             else {
                 logger('E',"Socket read failed", "");

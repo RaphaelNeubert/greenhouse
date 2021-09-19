@@ -40,8 +40,8 @@ int measure_temp(t_sensor_info* sensors, t_sensor_results* readings){
     ds18b20_wait_for_conversion(sensors->devices[0]);
 
     for (int i=0; i<sensors->num_devices; i++){
-        ds18b20_read_temp(sensors->devices[i], &readings[i]->value);
-        owb_string_from_rom_code(sensors->devices[i]->rom_code, readings[i]->romcode, 17);
-    6
+        ds18b20_read_temp(sensors->devices[i], &readings[i].value);
+        owb_string_from_rom_code(sensors->devices[i]->rom_code, readings[i].romcode, 17);
+    }
     return 0;
 }

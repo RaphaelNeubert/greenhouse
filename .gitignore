@@ -5,3 +5,4 @@ components
 server
 log
 *.out
+*.db
