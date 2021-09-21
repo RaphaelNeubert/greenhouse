@@ -7,8 +7,12 @@
 #include "tcp-client.h"
 #include "sensor.h"
 
-#define SAMPLE_PERIOD 30
+#define SAMPLE_PERIOD 60
 #define RETRIES 10
+//measured values outside of this intervall will be considered invalid
+#define MAX_TEMP 30.0
+#define MIN_TEMP (-20.0)
+
 
 void app_main(void){
     ESP_ERROR_CHECK(nvs_flash_init());
@@ -23,13 +27,20 @@ void app_main(void){
         measure_temp(sensors, readings);
         //create string following the syntax that will be parsed
         for (int i=0; i<sensors->num_devices; i++){
-            //append string
-            sprintf(submsg+strlen(submsg),"%s sensor %s: %f", (i!=0)?",":"", readings[i].romcode, readings[i].value);
+            //check if values are valid and send errmsg if not
+            if (readings[i].value > MAX_TEMP || readings[i].value < MIN_TEMP){
+                sprintf(submsg+strlen(submsg),"%s error: invalid sensor value: sensor %s value %f",
+                        (i!=0)?",":"", readings[i].romcode, readings[i].value);
+            }
+            else{
+                sprintf(submsg+strlen(submsg),"%s sensor %s: %f", (i!=0)?",":"", readings[i].romcode, readings[i].value);
+            }
         }
-        sprintf(msg, "test {%s}", submsg);
+        sprintf(msg, "{%s}", submsg);
         //send message
         for (int i=0; send_data(msg)!=0 && i<RETRIES; i++){
             vTaskDelay(1000 / portTICK_PERIOD_MS);
-        }        vTaskDelay(SAMPLE_PERIOD*1000 / portTICK_PERIOD_MS);
+        }
+        vTaskDelay(SAMPLE_PERIOD*1000 / portTICK_PERIOD_MS);
     }
 }

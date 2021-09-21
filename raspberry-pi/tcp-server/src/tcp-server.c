@@ -38,17 +38,24 @@ int logger(char type, const char* msg, const char* msg2){
     return 0;
 }
 
+
 int msg_recieved(char* msg){
-    t_parse_output parse_output;
-    parse_output.num_sensors = 0;
-    parse_output.msg[0] = '\0';
     sqlite3* db;
     char sqlstatement[256];
     char *errmsg = NULL;
     int sqlcheck;
+    t_parse_output parse_output;
+
+    parse_output.num_sensors = 0;
+    parse_output.msg[0] = '\0';
+    parse_output.err_count = 0;
 
     //parse recieved message
     if (parse(msg, &parse_output)){ ;
+        //log error messages recieved via TCP 
+        for (int i=0; i<parse_output.err_count; i++){
+            logger('E', "[ESP] ", parse_output.errmsg[i]);
+        }
         sqlcheck = sqlite3_open("../tempdata.db", &db);
         if (sqlcheck){
             logger('E',"Can't open database. sqlite errmsg: ", sqlite3_errmsg(db));
@@ -71,6 +78,8 @@ int msg_recieved(char* msg){
         }
         //log optional parser message
         if (strlen(parse_output.msg) > 0) logger('I', "Parser Message:", parse_output.msg);
+        
+        sqlite3_close(db);
         return 0;
     }
     else {
