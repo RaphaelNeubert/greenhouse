@@ -111,6 +111,9 @@ int main(){
         }
         logger('I',"Socket successfully created", "");
         
+        int enable = 1;
+        setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int));
+
         //socket bind
         if ((bind(server_socket, (struct sockaddr*)&server_sockaddr, sizeof(server_sockaddr))) != 0) {
             logger('E',"Socket bind failed", "");
