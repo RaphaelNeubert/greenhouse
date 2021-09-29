@@ -8,3 +8,4 @@ log
 *.db
 *.o
 raspi-env
+*.png
