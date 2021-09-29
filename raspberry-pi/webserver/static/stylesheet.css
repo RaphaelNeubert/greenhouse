@@ -1,0 +1,30 @@
+*{
+    margin: 0;
+    padding: 0;
+    text-decoration: none;
+    list-style: none;
+}
+nav{
+    background: #333;
+    width: 100%;
+}
+nav ul{
+    overflow: hidden;
+    margin-left: 20px;
+}
+nav ul li{
+    float: left;
+}
+nav ul li h1{
+    color: white;
+    text-align: center;
+    padding: 14px 16px;
+}
+nav ul li p{
+    color: white;
+    text-align: center;
+    padding: 14px 16px;
+}
+body{
+    background: #FFFADE;
+}

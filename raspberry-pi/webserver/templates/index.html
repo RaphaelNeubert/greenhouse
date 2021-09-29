@@ -2,8 +2,18 @@
 <html>
     <head>
         <title>Geodom</title>
+        <link rel="Stylesheet" href="static/stylesheet.css">
     </head>
     <body>
-        test
+        <nav>
+            <ul>
+                <li><h1>Aktuell</h1></li>
+                <li><p>Außen: {{ outside }}C</p></li>
+                <li><p>Innen: {{ inside}}C</p></li>
+                <li><p>Unterschied: {{ diff }}C</p></li>
+            </ul>
+        </nav>
+        <img src="/static/graph.png">
+        <img src="/static/graph1.png">
     </body>
 </html>
