@@ -63,11 +63,11 @@ int msg_recieved(char* msg){
         }
         printf("num sensors: %d\n", parse_output.num_sensors);
         //store recieved values
+        unsigned int timestamp = (unsigned)time(NULL);
         for (int i=0; i<parse_output.num_sensors; i++){
             //create sql statement
             sprintf(sqlstatement, "INSERT INTO temperature (timestamp, romcode, value) \n VALUES (%d, '%s', %f);",
-                    (unsigned)time(NULL), parse_output.temps[i].romcode, parse_output.temps[i].temperature);
-            puts(sqlstatement);
+                    timestamp, parse_output.temps[i].romcode, parse_output.temps[i].temperature);
             //execute sql statement
             sqlcheck = sqlite3_exec(db, sqlstatement, NULL, 0, &errmsg);
             if (sqlcheck != SQLITE_OK){
