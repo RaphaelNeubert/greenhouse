@@ -1,12 +1,15 @@
 from flask import Flask, render_template
 from apscheduler.schedulers.background import BackgroundScheduler
 import sqlite3
+import matplotlib
+matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 from matplotlib import dates as mpl_dates
 import time
 from datetime import datetime
 import tzlocal
 from pytz import timezone
+
 
 app = Flask(__name__)
 
@@ -55,7 +58,7 @@ def prepare_data():
     db.close();
 
 scheduler = BackgroundScheduler(daemon=True)
-scheduler.add_job(func=prepare_data, trigger="interval", seconds=10)
+scheduler.add_job(func=prepare_data, trigger="interval", seconds=60)
 scheduler.start()
 
 @app.route('/')
@@ -65,3 +68,4 @@ def index():
 if __name__ == '__main__':
     prepare_data()
     app.run(host='0.0.0.0')
+
