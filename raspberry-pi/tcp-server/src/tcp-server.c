@@ -88,7 +88,15 @@ int msg_recieved(char* msg){
     }
 }
   
-int main(){
+int main(int argc, char** argv){
+    if (argc != 2){
+        puts("usage: ./server <dirpath>");
+	exit(-1);
+    }
+    if (chdir(argv[1])){
+        logger('E',"changing path failed", "");
+	exit(-1);
+    }
     //loop to make it retry in case of failure 
     while (1){
         int server_socket, client_socket, n;

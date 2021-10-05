@@ -9,6 +9,8 @@ import time
 from datetime import datetime
 import tzlocal
 from pytz import timezone
+import os
+import sys
 
 
 app = Flask(__name__)
@@ -61,11 +63,24 @@ scheduler = BackgroundScheduler(daemon=True)
 scheduler.add_job(func=prepare_data, trigger="interval", seconds=60)
 scheduler.start()
 
+@app.after_request
+def add_header(r):
+    r.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, public, max-age=0"
+    r.headers["Pragma"] = "no-cache"
+    r.headers["Expires"] = "0"
+    return r
+
 @app.route('/')
 def index():
     return render_template('index.html', outside=last_val['outside'], inside=last_val['inside'], diff=last_val['diff']);
 
 if __name__ == '__main__':
+    if (len(sys.argv) != 2):
+        print("usage: python3 main.py <dirpath>")
+        exit(-1);
+    if (os.chdir(sys.argv[1])):
+        print("failed to change directory")
+        exit(-1);
     prepare_data()
     app.run(host='0.0.0.0')
 
