@@ -16,13 +16,14 @@ import sys
 app = Flask(__name__)
 
 last_val={}
+stats={}
 
 def generate_graph(db, sensors, hours, filename):
+    stamp = int(time.time())-hours*60*60
     for i, s in enumerate(sensors.keys()):
         x_time = []
         y_value = []
 
-        stamp = int(time.time())-hours*60*60
         cur = db.cursor()
         cur.execute("SELECT timestamp, value FROM temperature WHERE romcode IS ? AND timestamp >= ?", (s, stamp))
         rows = cur.fetchall()
@@ -39,7 +40,8 @@ def generate_graph(db, sensors, hours, filename):
     plt.legend()
     plt.savefig("static/%s.png" % filename, facecolor="#FFFADE")
     plt.close()
-def generate_stats(db, sensors):
+
+def get_last(db, sensors):
     cur = db.cursor()
     cur.execute("SELECT romcode, value FROM temperature WHERE timestamp = (SELECT MAX(timestamp) FROM temperature)")
     rows = cur.fetchall()
@@ -47,16 +49,34 @@ def generate_stats(db, sensors):
         last_val[sensors[rows[i][0]]] = rows[i][1]
     last_val['diff'] = abs(last_val['inside'] - last_val['outside'])
 
+def generate_stats(db, sensors, hours):
+    stamp = int(time.time())-hours*60*60
+    values = [{},{},{}]
+    for i, s in enumerate(sensors.keys()):
+        cur = db.cursor()
+        cur.execute("SELECT romcode, AVG(value), MAX(value), MIN(value) FROM temperature WHERE romcode IS ? AND timestamp >= ?", (s, stamp))
+        rows = cur.fetchall()
+        values[0][sensors[rows[0][0]]] = round(rows[0][1], 3)
+        values[1][sensors[rows[0][0]]] = round(rows[0][2], 3) 
+        values[2][sensors[rows[0][0]]] = round(rows[0][3], 3)
+
+    values[0]['diff'] = round(abs(values[0]['outside'] - values[0]['inside']), 3)
+    values[1]['diff'] = round(abs(values[1]['outside'] - values[1]['inside']), 3) 
+    values[2]['diff'] = round(abs(values[2]['outside'] - values[2]['inside']), 3)
+    stats[hours] = values
+
 def prepare_data():
     sensors = {"19011432674a2528":"inside", "cf011432f0e8a028":"outside"}
-    #connect to db
     try:
         db = sqlite3.connect("../tempdata.db");
     except Error as e:
         print(e)
-    generate_graph(db, sensors, 12, "graph")
-    generate_graph(db, sensors, 24, "graph1")
-    generate_stats(db, sensors)
+        return
+    generate_graph(db, sensors, 107, "graph")
+    generate_graph(db, sensors, 119, "graph1")
+    get_last(db, sensors)
+    generate_stats(db, sensors, 107)
+    generate_stats(db, sensors, 119)
     db.close();
 
 scheduler = BackgroundScheduler(daemon=True)
@@ -72,7 +92,13 @@ def add_header(r):
 
 @app.route('/')
 def index():
-    return render_template('index.html', outside=last_val['outside'], inside=last_val['inside'], diff=last_val['diff']);
+    return render_template('index.html', outside=last_val['outside'], inside=last_val['inside'], \
+            diff=last_val['diff'], oavg12=stats[107][0]['outside'], iavg12=stats[107][0]['inside'], davg12=stats[107][0]['diff'], \
+            omax12=stats[107][1]['outside'], imax12=stats[107][1]['inside'], dmax12=stats[107][1]['diff'],\
+            omin12=stats[107][2]['outside'], imin12=stats[107][2]['inside'], dmin12=stats[107][2]['diff'],\
+            oavg24=stats[119][0]['outside'], iavg24=stats[119][0]['inside'], davg24=stats[119][0]['diff'],\
+            omax24=stats[119][1]['outside'], imax24=stats[119][1]['inside'], dmax24=stats[119][1]['diff'],\
+            omin24=stats[119][2]['outside'], imin24=stats[119][2]['inside'], dmin24=stats[119][2]['diff']);
 
 if __name__ == '__main__':
     if (len(sys.argv) != 2):

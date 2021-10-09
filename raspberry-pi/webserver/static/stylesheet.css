@@ -3,6 +3,7 @@
     padding: 0;
     text-decoration: none;
     list-style: none;
+    box-sizing: border-box;
 }
 nav{
     background: #333;
@@ -27,4 +28,19 @@ nav ul li p{
 }
 body{
     background: #FFFADE;
+}
+table{
+    border-collapse: collapse;
+    margin-right: auto;
+    width: 30%;
+    margin: 10px;
+    display: inline-block; 
+}
+table td, table th{
+	border: 1px solid #000000;
+	text-align: left;
+	padding: 8px;
+}
+table tr:nth-child(even){
+	background-color: #dddddd;
 }
