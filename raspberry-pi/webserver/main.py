@@ -56,6 +56,7 @@ def generate_stats(db, sensors, hours):
         cur = db.cursor()
         cur.execute("SELECT romcode, AVG(value), MAX(value), MIN(value) FROM temperature WHERE romcode IS ? AND timestamp >= ?", (s, stamp))
         rows = cur.fetchall()
+        print(rows)
         values[0][sensors[rows[0][0]]] = round(rows[0][1], 3)
         values[1][sensors[rows[0][0]]] = round(rows[0][2], 3) 
         values[2][sensors[rows[0][0]]] = round(rows[0][3], 3)
@@ -72,11 +73,11 @@ def prepare_data():
     except Error as e:
         print(e)
         return
-    generate_graph(db, sensors, 107, "graph")
-    generate_graph(db, sensors, 119, "graph1")
+    generate_graph(db, sensors, 12, "graph")
+    generate_graph(db, sensors, 24, "graph1")
     get_last(db, sensors)
-    generate_stats(db, sensors, 107)
-    generate_stats(db, sensors, 119)
+    generate_stats(db, sensors, 12)
+    generate_stats(db, sensors, 24)
     db.close();
 
 scheduler = BackgroundScheduler(daemon=True)
@@ -93,12 +94,12 @@ def add_header(r):
 @app.route('/')
 def index():
     return render_template('index.html', outside=last_val['outside'], inside=last_val['inside'], \
-            diff=last_val['diff'], oavg12=stats[107][0]['outside'], iavg12=stats[107][0]['inside'], davg12=stats[107][0]['diff'], \
-            omax12=stats[107][1]['outside'], imax12=stats[107][1]['inside'], dmax12=stats[107][1]['diff'],\
-            omin12=stats[107][2]['outside'], imin12=stats[107][2]['inside'], dmin12=stats[107][2]['diff'],\
-            oavg24=stats[119][0]['outside'], iavg24=stats[119][0]['inside'], davg24=stats[119][0]['diff'],\
-            omax24=stats[119][1]['outside'], imax24=stats[119][1]['inside'], dmax24=stats[119][1]['diff'],\
-            omin24=stats[119][2]['outside'], imin24=stats[119][2]['inside'], dmin24=stats[119][2]['diff']);
+            diff=last_val['diff'], oavg12=stats[12][0]['outside'], iavg12=stats[12][0]['inside'], davg12=stats[12][0]['diff'], \
+            omax12=stats[12][1]['outside'], imax12=stats[12][1]['inside'], dmax12=stats[12][1]['diff'],\
+            omin12=stats[12][2]['outside'], imin12=stats[12][2]['inside'], dmin12=stats[12][2]['diff'],\
+            oavg24=stats[24][0]['outside'], iavg24=stats[24][0]['inside'], davg24=stats[24][0]['diff'],\
+            omax24=stats[24][1]['outside'], imax24=stats[24][1]['inside'], dmax24=stats[24][1]['diff'],\
+            omin24=stats[24][2]['outside'], imin24=stats[24][2]['inside'], dmin24=stats[24][2]['diff']);
 
 if __name__ == '__main__':
     if (len(sys.argv) != 2):
